@@ -5,7 +5,7 @@ import sys
 from PIL import Image
 import numpy as np
 
-from ? import solve_sudoku
+from solver import solve_sudoku
 from cell_cutting import get_cells
 
 def rgb2gray(rgb):
