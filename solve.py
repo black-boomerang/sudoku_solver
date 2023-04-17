@@ -8,6 +8,7 @@ import numpy as np
 from solver import solve_sudoku
 from cell_cutting import get_cells
 
+
 def rgb2gray(rgb):
     return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
 
@@ -71,18 +72,21 @@ class Classifier(nn.Module):
         x = torch.flatten(x, start_dim=1)
         return self.out_linear(self.do(x)), x
 
-model = torch.load('checkpoint_final.pth')
 
-im = Image.open(f'../sudoku_data/v2_test/{sys.argv[0]}')
-images = list(map(rgb2gray, list(get_cells(np.array(im), out_image_side=128))))
+if __name__ == "__main__":
+    model = torch.load('checkpoint_final.pth')
 
-preds = []
-saved_logits = []
+    im = Image.open(f'../sudoku_data/v2_test/{sys.argv[0]}')
+    images = list(map(rgb2gray, list(get_cells(np.array(im), out_image_side=128))))
 
-for im in images:
-    with torch.no_grad():
-        logits = model(torch.FloatTensor(im).unsqueeze(0).unsqueeze(0).cuda() / 255)[0].cpu()
-    preds.append(torch.argmax(logits).item())
-    saved_logits.append(logits.detach().numpy())
+    preds = []
+    saved_logits = []
 
-print(solve_sudoku(context_preprocessing(np.array(preds).reshape(9, 9), np.array(saved_logits).reshape((9, 9, 10)))))
+    for im in images:
+        with torch.no_grad():
+            logits = model(torch.FloatTensor(im).unsqueeze(0).unsqueeze(0).cuda() / 255)[0].cpu()
+        preds.append(torch.argmax(logits).item())
+        saved_logits.append(logits.detach().numpy())
+
+    print(solve_sudoku(context_preprocessing(np.array(preds).reshape(9, 9), np.array(saved_logits).reshape((9, 9, 10)))))
+
