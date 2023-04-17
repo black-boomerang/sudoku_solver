@@ -74,10 +74,11 @@ class Classifier(nn.Module):
 
 
 if __name__ == "__main__":
-    model = torch.load('checkpoint_final.pth')
-
-    im = Image.open(f'../sudoku_data/v2_test/{sys.argv[0]}')
+    images_path = sys.argv[1]
+    im = Image.open(images_path)
     images = list(map(rgb2gray, list(get_cells(np.array(im), out_image_side=128))))
+
+    model = torch.load('checkpoint_final.pth')
 
     preds = []
     saved_logits = []
@@ -88,5 +89,11 @@ if __name__ == "__main__":
         preds.append(torch.argmax(logits).item())
         saved_logits.append(logits.detach().numpy())
 
-    print(solve_sudoku(context_preprocessing(np.array(preds).reshape(9, 9), np.array(saved_logits).reshape((9, 9, 10)))))
+
+    try:
+        recognized_sudoku = context_preprocessing(np.array(preds).reshape(9, 9), np.array(saved_logits).reshape((9, 9, 10)))
+        solution = solve_sudoku(recognized_sudoku.flatten())
+        print(solution)
+    except Exception as e:
+        print(str(e))
 
