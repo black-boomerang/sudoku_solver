@@ -21,8 +21,12 @@ def lines_intersection(h: LineInfo, v: LineInfo) -> Tuple[int, int]:
     return x, y
 
 
-def get_cells(image: np.ndarray, out_image_side: int = 32) -> Generator[np.ndarray, None, None]:
-    h_lines, v_lines = detect_grid(image)
+def get_cells(image: np.ndarray, out_image_side: int = 32, bin_threshold: float = 2) -> Generator[
+    np.ndarray, None, None]:
+    for bin_threshold in np.linspace(0.5, 10.0, 20):
+        h_lines, v_lines = detect_grid(image, bin_threshold=bin_threshold)
+        if len(h_lines) == 10 and len(v_lines) == 10:
+            break
 
     # TODO: обработать случай, когда линий больше или меньше
     if len(h_lines) != 10 or len(v_lines) != 10:
