@@ -17,9 +17,14 @@ class LineType(Enum):
 class LineInfo:
     def __init__(self, line: Tuple[int, int, int, int]) -> None:
         self.x1, self.y1, self.x2, self.y2 = line
-        self.theta = np.arccos(np.abs((self.x2 - self.x1) / math.hypot(self.x2 - self.x1, self.y2 - self.y1)))
-        self.rho = self.x1 * np.cos(self.theta) + self.y1 * np.sin(self.theta)
-        if self.theta < np.pi / 4:
+        if self.x1 > self.x2:
+            self.x1, self.x2 = self.x2, self.x1
+            self.y1, self.y2 = self.y2, self.y1
+        self.theta = np.arcsin((self.y2 - self.y1) / math.hypot(self.x2 - self.x1, self.y2 - self.y1))
+        # print(f'{(self.y2 - self.y1) / math.hypot(self.x2 - self.x1, self.y2 - self.y1)} {self.theta}')
+        self.rho = self.x1 * np.sin(self.theta) + self.y1 * np.cos(self.theta)
+        # print(f'{self.theta} {self.rho}')
+        if np.abs(self.theta) < np.pi / 4:
             self.line_type = LineType.HORIZONTAL
         else:
             self.line_type = LineType.VERTICAL
@@ -34,6 +39,23 @@ def opposite_type(line_type: LineType) -> LineType:
     if line_type == LineType.HORIZONTAL:
         return LineType.VERTICAL
     return LineType.HORIZONTAL
+
+
+def get_average_line(lines_infos: List[LineInfo]) -> LineInfo:
+    theta_sum = 0
+    rho_sum = 0
+    for line_info in lines_infos:
+        theta_sum += line_info.theta
+        rho_sum += line_info.rho
+        # print(f'{line_info.center[0]} {line_info.center[1]} {line_info.theta} {line_info.rho}')
+    theta = theta_sum / len(lines_infos)
+    rho = rho_sum / len(lines_infos)
+
+    if np.cos(theta) == 0.0:
+        return LineInfo((int(rho), 0, int(rho), 1000))
+
+    # print(f'theta = {theta}')
+    return LineInfo((0, int((rho) / np.cos(theta)), 1000, int((rho - 1000 * np.sin(theta)) / np.cos(theta))))
 
 
 def show_image_with_lines(image: np.ndarray, lines: List[LineInfo], title: str = '') -> None:
@@ -110,20 +132,23 @@ def merge_lines(lines: List[LineInfo]) -> List[LineInfo]:
 
     line_type = lines[0].line_type
     if line_type == LineType.HORIZONTAL:
-        dist = [line.center[1] for line in lines]
+        dist_main = [line.center[1] for line in lines]
+        dist_add = [line.center[0] for line in lines]
     else:
-        dist = [line.center[0] for line in lines]
+        dist_main = [line.center[0] for line in lines]
+        dist_add = [line.center[1] for line in lines]
 
     groups = []
     cur_group = []
     cur_dist = -100
-    for index in np.argsort(dist):
-        if dist[index] - cur_dist > 15:
+    for index in np.argsort(dist_main):
+        if dist_main[index] - cur_dist > (max(dist_main) - min(dist_main)) / 35:
             groups.append(cur_group)
             cur_group = [lines[index]]
         else:
             cur_group.append(lines[index])
-        cur_dist = dist[index]
+        cur_dist = dist_main[index]
+        cur_dist_add = dist_add[index]
 
     if len(cur_group) > 0:
         groups.append(cur_group)
