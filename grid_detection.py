@@ -47,6 +47,10 @@ def show_image_with_lines(image: np.ndarray, lines: List[LineInfo], title: str =
 
 def preprocess(image: np.ndarray, bin_threshold: float) -> np.ndarray:
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+    gray = cv.filter2D(gray, -1, kernel)
+    kernel = np.ones((5, 5), np.float32) / 25
+    gray = cv.filter2D(gray, -1, kernel)
     blured = cv.medianBlur(gray, 5)
     binarized = cv.adaptiveThreshold(blured, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, bin_threshold)
     blured = cv.medianBlur(binarized, 5)
@@ -126,6 +130,8 @@ def merge_lines(lines: List[LineInfo]) -> List[LineInfo]:
 
     groups = groups[1:]
     center_lines = [group[len(group) // 2] for group in groups]
+    center_lines[0] = groups[0][-1]
+    center_lines[-1] = groups[-1][0]
 
     return center_lines
 

@@ -23,7 +23,7 @@ def lines_intersection(h: LineInfo, v: LineInfo) -> Tuple[int, int]:
 
 def get_cells(image: np.ndarray, out_image_side: int = 32, bin_threshold: float = 2) -> Generator[
     np.ndarray, None, None]:
-    for bin_threshold in np.linspace(0.5, 10.0, 20):
+    for bin_threshold in np.linspace(0.5, 4.5, 5):
         h_lines, v_lines = detect_grid(image, bin_threshold=bin_threshold)
         if len(h_lines) == 10 and len(v_lines) == 10:
             break
@@ -46,4 +46,8 @@ def get_cells(image: np.ndarray, out_image_side: int = 32, bin_threshold: float 
         for v in range(1, len(points[0])):
             pts = np.float32([points[h - 1][v - 1], points[h - 1][v], points[h][v - 1], points[h][v]])
             transform = cv.getPerspectiveTransform(pts, out_image_pts)
-            yield cv.warpPerspective(image, transform, (out_image_side, out_image_side))
+
+            warped = cv.warpPerspective(image, transform, (out_image_side, out_image_side))
+            k = out_image_side // 9
+            warped = cv.medianBlur(warped, k - k % 2 + 1)
+            yield warped

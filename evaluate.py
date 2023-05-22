@@ -13,7 +13,7 @@ from solve import context_preprocessing, rgb2gray, Classifier
 def evaluate(images_path: str):
     image_names = list(filter(lambda x: x.endswith('.jpg'), os.listdir(images_path)))
     correct_solutions = 0
-    model = torch.load('checkpoint_final.pth')
+    model = torch.load('checkpoint_7_epoch_13.pth')
     logits_1 = []
     logits_2 = []
     for image_name in tqdm(image_names):
